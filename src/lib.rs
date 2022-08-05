@@ -96,6 +96,10 @@ unsafe impl GlobalAlloc for Jemalloc {
     #[inline]
     unsafe fn alloc(&self, layout: Layout) -> *mut u8 {
         assume!(layout.size() != 0);
+        const THRESHOLD: usize = 256 * 1024 * 1024 * 1024; // 256 GB
+        if layout.size() > THRESHOLD {
+            panic!("Bad allocation");
+        }
         let flags = layout_to_flags(layout.align(), layout.size());
         let ptr = if flags == 0 {
             ffi::malloc(layout.size())
